@@ -297,23 +297,38 @@
     return xhr
   }
 
-  // handle optional data/success arguments
-  function parseArguments(url, data, success, dataType) {
-    if ($.isFunction(data)) dataType = success, success = data, data = undefined
-    if (!$.isFunction(success)) dataType = success, success = undefined
+  // handle optional data/success/error arguments
+  function parseArguments(url, data, success, error, dataType) {
+    var isDataFunction = $.isFunction(data),
+        isSuccessFunction = $.isFunction(success),
+        isErrorFunction = $.isFunction(error)
+
+    // if data is missed  
+    if (isDataFunction) 
+      if (isSuccessFunction) 
+        dataType = error, error = success, success = data, data = undefined
+      else 
+        dataType = success, success = data, data = error = undefined
+
+    if (!isSuccessFunction) 
+      dataType = success, success = error = undefined
+    else if (!isErrorFunction) 
+      dataType = error, error = undefined
+
     return {
       url: url
     , data: data
+    , error: error
     , success: success
     , dataType: dataType
     }
   }
 
-  $.get = function(/* url, data, success, dataType */){
+  $.get = function(/* url, data, success, error, dataType */){
     return $.ajax(parseArguments.apply(null, arguments))
   }
 
-  $.post = function(/* url, data, success, dataType */){
+  $.post = function(/* url, data, success, error, dataType */){
     var options = parseArguments.apply(null, arguments)
     options.type = 'POST'
     return $.ajax(options)
